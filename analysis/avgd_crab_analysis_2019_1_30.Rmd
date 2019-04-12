@@ -1,0 +1,184 @@
+---
+title: "Crab Foraging Trials Analysis - Averaged"
+author: "J. Curtis"
+date: "January 30, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE)
+```
+
+```{r fr_param}
+fr_param <- function(dat) {
+  temp <- summary(dat$fit)
+  st_err <- as.data.frame(temp@coef[,c(1,2)])
+  result <- as.data.frame(t(as.numeric(as.character(c(st_err[1,],st_err[2,])))))
+  colnames(result) <- c("a", "st_err_a", "h", "st_err_h")
+  return(result)
+}
+```
+
+## Experiment Overview
+Below are some preliminary visualizations of the data from crab foraging trials conducted on 12/10, 12/22 2018, and 1/21. As a reminder of the protocol, crabs were acclimated in isolation for 8 days before trials began. All crabs included in trials had demonstrated a willingness and ability to feed during the acclimation period. Crabs were fed ad-lib until 2 days before the start of each trial. Trials lasted 24 hours, and always began between 4-5 PM. 24 crabs were divided into 12 treatments, with one instance of each combination of 3 predator densities (1,2,3 crabs) and 4 prey densities (2,5,10,20 mussels). Each trial was run twice, with an ad-lib feeding and 2 days of starvation inbetween the 1st and 2nd replicate. The same crabs were used in each predxprey treatment for both replicates. Before the start of the 2nd replicate, crabs were swapped across the divider in each tank to account for any effect of being closer to the inflow, and to keep handling time consistent across replicates and treatments. 
+
+
+```{r 1, error = FALSE, warning = FALSE}
+
+# Load data, trim data, fit FR response to raw data
+
+#Load libraries, set wd
+
+library(frair)
+library(tidyverse)
+library(knitr)
+library(gridExtra)
+
+setwd("C:/Users/Joseph/Box Sync/Shared Stier Lab Folder/Projects/Rock Crab Research/Data/")
+
+#Load data
+
+raw <- read.csv("crab_feeding_trial_data_dec2018.csv")
+raw$pred_dens <- as.character(raw$pred_dens)
+
+# Exclude problem trials
+
+idx <- as.integer(c((subset(raw$order, raw$trial_week == 1 & raw$trial_rep == 1 & raw$trial_num == 8)),
+                    subset(raw$order, raw$crab_ids == "8"),9, subset(raw$order, raw$prey_eaten == 0)))
+raw_trim <- raw[-c(idx),]
+
+# Calculate the average  
+
+raw_trim$grp_var <- (raw_trim$trial_week *12) + raw_trim$trial_num - 12 
+grp_trial <- group_by(raw_trim, grp_var)
+
+grp_trial_sum <- summarize(grp_trial, pred_dens = min(pred_dens), prey_in = mean(prey_in)*100, prey_eaten = round(mean(prey_eaten)*100), prey_per_crab = round(mean(prey_per_crab)*100))
+
+trial_sum_raw <- data.frame(as.numeric(grp_trial$grp_var), as.numeric(grp_trial$pred_dens), as.numeric(grp_trial$prey_in), as.numeric(grp_trial$prey_eaten), as.numeric(grp_trial$prey_per_crab))
+
+grp_trial_sum_raw <- summarize(grp_trial, pred_dens = min(pred_dens), prey_in = mean(prey_in), prey_eaten = round(mean(prey_eaten)), prey_per_crab = round(mean(prey_per_crab)))
+write.csv(grp_trial_sum_raw, file = "avg_crab_trial_data.csv")
+write.csv(trial_sum_raw, file = "crab_trial_data_for_ML.csv")
+```
+
+```{r 2, error = FALSE, warning = FALSE}
+# Fit FR curves to raw data
+
+dens_1 <- grp_trial_sum %>%
+  filter(pred_dens == "1")
+
+dens_2 <- grp_trial_sum %>%
+  filter(pred_dens == "2")
+
+dens_3 <- grp_trial_sum %>%
+  filter(pred_dens == "3")
+
+crab1.fr <- frair_fit(prey_eaten ~ prey_in, start = list(a = 0.8, h = 0.02), fixed = list(T = 1), response = "hollingsII", data = dens_1)
+crab2.fr <- frair_fit(prey_eaten ~ prey_in, start = list(a = 0.8, h = 0.02), fixed = list(T = 1), response = "hollingsII", data = dens_2)
+crab3.fr <- frair_fit(prey_eaten ~ prey_in, start = list(a = 0.8, h = 0.02), fixed = list(T = 1), response = "hollingsII", data = dens_3)
+```
+
+## Raw data plotted
+
+First, here's the data plotted as number of mussels eaten vs. number of mussels provided, with no adjustment for the number of crabs in each trial and averages calculated across trial replicates. A few trials were completely excluded due to crab non-cooperation (climbing over tanks, non-acclimation) leaving n = `r nrow(raw_trim)` data points. Because the frair package doesn't play nice with fractions, both axes were multiplied by 100 and rounded, so the units are inaccurate.
+
+```{r 3, include = TRUE}
+
+plot(prey_eaten ~ jitter(prey_in), type = "n", data = grp_trial_sum, col = as.factor(grp_trial_sum$pred_dens), xlab = "Prey Density (N0)", ylab = "Prey Consumed (Ne)")
+points(jitter(grp_trial_sum$prey_in[grp_trial_sum$pred_dens == "1"]), grp_trial_sum$prey_eaten[grp_trial_sum$pred_dens == "1"], col = "red", cex = 1.1)
+points(jitter(grp_trial_sum$prey_in[grp_trial_sum$pred_dens == "2"]), grp_trial_sum$prey_eaten[grp_trial_sum$pred_dens == "2"], col = "blue", cex = 1.1)
+points(jitter(grp_trial_sum$prey_in[grp_trial_sum$pred_dens == "3"]), grp_trial_sum$prey_eaten[grp_trial_sum$pred_dens == "3"], col = "black", cex = 1.1)
+
+lines(crab1.fr, col = "red", lwd = 2)
+lines(crab2.fr, col = "blue", lwd = 2)
+lines(crab3.fr, col = "black", lwd = 2)
+
+legend (150, 1200, legend = c("1 Crab", "2 Crabs", "3 Crabs"), col = c("red", "blue", "black"), lwd = 2)
+title("Number of Mussels Eaten vs. Number of Mussels Provided")
+
+```
+
+It appears that the FR shape changes with increasing crab densities, though not in a consistent way with increasing density
+ 
+## Per-crab data plotted
+
+Now let's look at the data plotted as number of mussels eaten *per crab* vs. number of mussels provided. Because the frair package doesn't play nice with fractions, the data has been multiplied by 100, so units on the x and y axis are not accurate. 
+
+```{r 4}
+
+## per crab
+
+percrab1.fr <- frair_fit(prey_per_crab ~ prey_in, start = list(a = 0.8, h = 0.02), fixed = list(T = 1), response = "hollingsII", data = dens_1)
+percrab2.fr <- frair_fit(prey_per_crab ~ prey_in, start = list(a = 0.8, h = 0.02), fixed = list(T = 1), response = "hollingsII", data = dens_2)
+percrab3.fr <- frair_fit(prey_per_crab ~ prey_in, start = list(a = 0.8, h = 0.02), fixed = list(T = 1), response = "hollingsII", data = dens_3)
+
+```
+
+
+```{r 5, include = TRUE}
+
+# Plot fits per crab
+
+plot(prey_per_crab ~ jitter(prey_in), type = "n", data = grp_trial_sum, col = as.factor(grp_trial_sum$pred_dens), xlab = "Prey Density (N0)", ylab = "Prey Consumed per Crab (Ne)")
+points(jitter(grp_trial_sum$prey_in[grp_trial_sum$pred_dens == "1"]), grp_trial_sum$prey_per_crab[grp_trial_sum$pred_dens == "1"], col = "red", cex = 1.1)
+points(jitter(grp_trial_sum$prey_in[grp_trial_sum$pred_dens == "2"]), grp_trial_sum$prey_per_crab[grp_trial_sum$pred_dens == "2"], col = "blue", cex = 1.1)
+points(jitter(grp_trial_sum$prey_in[grp_trial_sum$pred_dens == "3"]), grp_trial_sum$prey_per_crab[grp_trial_sum$pred_dens == "3"], col = "black", cex = 1.1)
+
+lines(percrab1.fr, col = "red", lwd = 2)
+lines(percrab2.fr, col = "blue", lwd = 2)
+lines(percrab3.fr, col = "black", lwd = 2)
+
+legend (150, 700, legend = c("1 Crab", "2 Crabs", "3 Crabs"), col = c("red", "blue", "black"), lwd = 2)
+title("Number of Mussels Eaten per crab vs. Number of Mussels Provided")
+
+```
+
+It appears that the relationship between the treatments has reversed when the number of crabs per treatment are accounted for, with the FR curve for individual crabs featuring a higher attack rate and higher asymptote, both of which decrease  with increasing crab density. Putting these two graphs together, it appears that more crabs may consume more mussels overall, but individual crabs eat less and are more "wary" in their consumptive behavior at higher densities. 
+
+Below are the summarized FR response parameters on an individual and per crab basis. Note that the handling time was multiplied by 100 to account for the effect of multiplying the raw data. Attack rate was not affected by multiplication. 
+
+```{r 6}
+
+# results_table <- as_data_frame(rbind(crab1.fr$coefficients,crab2.fr$coefficients,crab3.fr$coefficients,percrab1.fr$coefficients,percrab2.fr$coefficients,percrab3.fr$coefficients))
+
+results_table <- as.data.frame(rbind(fr_param(crab1.fr),fr_param(crab2.fr),fr_param(crab3.fr),fr_param(percrab1.fr),fr_param(percrab2.fr),fr_param(percrab3.fr)))
+results_table$h <- results_table$h*100
+results_table <- add_column(results_table, density = c(1,2,3,1,2,3), .before = "a")
+results_table <- add_column(results_table, analysis = c("grouped", "grouped", "grouped", "per crab", "per crab", "per crab"), .before = "a")
+results_table$T <- NULL
+results_table_trim <- subset(results_table, analysis == "grouped")
+```
+
+```{r table, include = TRUE, warning = FALSE}
+
+kable(results_table)
+
+```
+
+Here are the results plotted together, with attack rate and handling time values (+/- standard error) plotted vs. crab density. These are only from the grouped 
+```{r param_fig, include = TRUE}
+
+a_plot <- ggplot(results_table_trim, aes(x = density, y = a)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = a-st_err_a, ymax = a+st_err_a), width = .1) +
+  theme_classic()
+
+h_plot <- ggplot(results_table_trim, aes(x = density, y = h)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = h-st_err_h, ymax = h+st_err_h), width = .1) +
+  theme_classic()
+
+grid.arrange(a_plot,h_plot, ncol=2)  
+
+
+```
+
+
+## Next steps
+
+Next steps include
+
+* ~~Average the data points within each trial to avoid overconfidence in fits due to pseudoreplication~~
+* Extract and statistically assess the differences in FR curve shapes provided by this analysis
+* Figure out how to check for/account for any effect of size, which varied among trials
+* Visualize confidence intervals for these fits and relationships
