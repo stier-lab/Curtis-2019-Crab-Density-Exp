@@ -8,10 +8,8 @@ library(tidyverse)
 
 # Crab size extraction per trial
 
-setwd("C:/Users/Joseph/Box Sync/Shared Stier Lab Folder/Projects/Rock Crab Research/Data")
-
-size <- read.csv("crab_size_data_extracted.csv")
-raw <- read.csv("crab_feeding_trial_data_dec2018.csv")
+size <- read.csv(here("data/crab_size_data_extracted.csv"))
+raw <- read.csv(here("data/crab_feeding_trial_data_dec2018.csv"))
 
 
 dat_sep <- separate_rows(raw, crab_id, sep = ",")

@@ -51,12 +51,10 @@ library(tidyverse)
 library(knitr)
 library(gridExtra)
 
-setwd("C:/Users/Joseph/Box Sync/Shared Stier Lab Folder/Projects/Rock Crab Research/Data/")
-
 #Load data
 
-raw <- read.csv("crab_feeding_trial_data_dec2018.csv")
-size <- read.csv("crab_size_data_extracted.csv")
+raw <- read.csv(here("data/crab_feeding_trial_data_dec2018.csv"))
+size <- read.csv(here("data/crab_size_data_extracted.csv"))
 raw$pred_dens <- as.character(raw$pred_dens)
 
 # Exclude problem trials
@@ -82,8 +80,8 @@ raw_trim$prey_per_crab <- round(raw_trim$prey_per_crab*100)
 #trial_sum_raw <- data.frame(as.numeric(grp_trial$grp_var), as.numeric(grp_trial$pred_dens), as.numeric(grp_trial$prey_in), as.numeric(grp_trial$prey_eaten), as.numeric(grp_trial$prey_per_crab))
 
 #raw_trim_raw <- summarize(grp_trial, pred_dens = min(pred_dens), prey_in = mean(prey_in), prey_eaten = round(mean(prey_eaten)), prey_per_crab = round(mean(prey_per_crab)))
-#write.csv(raw_trim_raw, file = "avg_crab_trial_data.csv")
-#write.csv(trial_sum_raw, file = "crab_trial_data_for_ML.csv")
+#write.csv(raw_trim_raw, file = here("data/avg_crab_trial_data.csv"))
+#write.csv(trial_sum_raw, file = here("data/crab_trial_data_for_ML.csv"))
 ```
 
 ```{r 2, error = FALSE, warning = FALSE}

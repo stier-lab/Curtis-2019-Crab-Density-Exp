@@ -6,10 +6,10 @@
 rm(list=ls())
 
 library(tidyverse)
+library(here)
 
-setwd("C:/Users/Joseph/Google Drive/Stier Lab/Lab Projects/Rock Crab Research/Data/Analysis/Bootstrap")
 
-boot_param_hv <- read.csv("bootstrap_results_hv_avg.csv")
+boot_param_hv <- read.csv(here("analysis/results/bootstrap_results_hv_avg.csv"))
 
 # Get quartiles for bootstrapped parameters
 
