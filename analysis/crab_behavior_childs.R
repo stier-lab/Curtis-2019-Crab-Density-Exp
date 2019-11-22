@@ -41,3 +41,27 @@ ggplot(data_complete, aes(x=activity_proportion, y=total_aggression, color=crab_
 
 ggplot(data_complete, aes(x=activity_proportion, y=sum_mussels_eaten, color=crab_dens))+geom_point()
 
+# Per Trial
+df3 <- data %>%
+  group_by(trial_id) %>%
+  summarize(sum_aggressive_posture = sum(aggressive_posture),
+            sum_fights_initiated = sum(fights_initiated),
+            sum_fights_responded = sum(fights_responded),
+            sum_claw_strikes = sum(claw_strikes),
+            sum_mussels_handled = sum(mussels_handled),
+            sum_mussels_eaten = sum(mussels_eaten),
+            sum_activity_subtotal = sum(activity_subtotal))
+joined_trial <- right_join(df3, df2)
+data_complete_trial <- joined_trial %>%
+  group_by(trial_id) %>%
+  mutate(activity_proportion=sum_activity_subtotal/video_total,
+         total_aggression=sum_aggressive_posture+sum_fights_initiated+sum_fights_responded+sum_claw_strikes)
+
+## Figures
+ggplot(data_complete_trial, aes(x=crab_dens, y=activity_proportion))+geom_point()
+
+ggplot(data_complete_trial, aes(x=crab_dens, y=total_aggression))+geom_point()
+
+ggplot(data_complete_trial, aes(x=activity_proportion, y=total_aggression, color=crab_dens))+geom_point()
+
+ggplot(data_complete_trial, aes(x=activity_proportion, y=sum_mussels_eaten, color=crab_dens))+geom_point()
