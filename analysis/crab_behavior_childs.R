@@ -112,12 +112,12 @@ ggplot(data_complete_trial, aes(as.factor(crab_dens), activity_proportion))+geom
 ggplot(data_complete_trial, aes(as.factor(crab_dens), total_aggression))+geom_boxplot()+
   labs(title="Density vs. Aggression per Trial", x="Crab Density", y="Total Aggression")
 
-## Activity vs. Total Agression Plot
+## Activity vs. Total Aggression Plot
 ggplot(data_complete_trial, aes(x=activity_proportion, y=total_aggression, color=as.factor(crab_dens)))+geom_point()+
   geom_smooth(method = "lm")+
   labs(title="Activity vs. Aggression per Trial", x="Activity Proportion", y="Total Aggression", color="Crab Density")
 
-## Activity vs. Standardized Total Agression Plot
+## Activity vs. Standardized Total Aggression Plot
 ggplot(data_complete_trial, aes(x=activity_proportion, y=standardized_total_aggression, color=as.factor(crab_dens)))+geom_point()+
   geom_smooth(method = "lm")+
   labs(title="Activity vs. Standardized Aggression per Trial", x="Activity Proportion", y="Standardized Total Aggression", color="Crab Density")
@@ -162,8 +162,67 @@ ggplot(data_complete_trial, aes(x=activity_proportion, y=prey_eaten, color=as.fa
   geom_smooth(method = "lm")+
   labs(title="Activity vs. Mussels Eaten per Trial", x="Activity Proportion", y="Mussels Eaten", color="Crab Density")
 
-## Activity vs. Stndardized Mussles Eaten (during entire trial) Plot 
+## Activity vs. Standardized Mussles Eaten (during entire trial) Plot 
 ggplot(data_complete_trial, aes(x=activity_proportion, y=standardized_prey_eaten, color=as.factor(crab_dens)))+geom_point()+
   geom_smooth(method = "lm")+
   labs(title="Activity vs. Standardized Mussels Eaten per Trial", x="Activity Proportion", y="Mussels Eaten", color="Crab Density")
+
+#7) Trial Average per Crab
+df4 <- data_complete %>%
+  group_by(crab_id) %>%
+  summarize(avg_aggressive_posture = mean(sum_aggressive_posture),
+            avg_fights_initiated = mean(sum_fights_initiated),
+            avg_fights_responded = mean(sum_fights_responded),
+            avg_claw_strikes = mean(sum_claw_strikes),
+            avg_total_aggression = mean(total_aggression),
+            avg_mussels_handled = mean(sum_mussels_handled),
+            avg_mussels_eaten = mean(sum_mussels_eaten),
+            avg_activity_proportion = mean(activity_proportion),
+            avg_standardized_mussels_eaten = mean(standardized_mussels_eaten),
+            avg_standardized_mussels_handled = mean(standardized_mussels_handled),
+            avg_standardized_total_aggression = mean(standardized_total_aggression))
+data_complete_average <- right_join(df4, df2)
+
+## Density vs. Mean Activity Plot
+ggplot(data_complete_average, aes(as.factor(crab_dens), avg_activity_proportion))+geom_boxplot()+
+  labs(title="Density vs. Mean Activity per Crab", x="Crab Density", y="Mean Activity Proportion")
+
+## Density vs. Mean Total Aggression Plot
+ggplot(data_complete_average, aes(as.factor(crab_dens), avg_total_aggression))+geom_boxplot()+
+  labs(title="Density vs. Mean Aggression per Crab", x="Crab Density", y="Mean Total Aggression")            
+
+## Mean Total Aggression vs. Mussels Handled
+ggplot(data_complete_average, aes(x=avg_total_aggression, y=avg_mussels_handled, color=as.factor(crab_dens)))+geom_point()+
+  geom_smooth(method = "lm")+
+  labs(title="Mean Aggression vs. Mussels Handled per Crab", x="Mean Total Agression", y="Mean Mussels Handled", color="Crab Density")
+
+## Mean Activity vs. Total Agression Plot
+ggplot(data_complete_average, aes(x=avg_activity_proportion, y=avg_total_aggression, color=as.factor(crab_dens)))+geom_point()+
+  geom_smooth(method = "lm")+
+  labs(title="Mean Activity vs. Aggression per Crab", x="Mean Activity Proportion", y="Mean Total Aggression", color="Crab Density")
+
+## Mean Activity vs. Standardized Total Agression Plot
+ggplot(data_complete_average, aes(x=avg_activity_proportion, y=avg_standardized_total_aggression, color=as.factor(crab_dens)))+geom_point()+
+  geom_smooth(method = "lm")+
+  labs(title="Mean Activity vs. Standardized Aggression per Crab", x="Mean Activity Proportion", y="Mean Standardized Total Aggression", color="Crab Density")
+
+## Mean Activity vs. Mussles Eaten Plot
+ggplot(data_complete_average, aes(x=avg_activity_proportion, y=avg_mussels_eaten, color=as.factor(crab_dens)))+geom_point()+
+  geom_smooth(method = "lm")+
+  labs(title="Mean Activity vs. Mussels Eaten per Crab", x="Mean Activity Proportion", y="Mean Mussels Eaten", color="Crab Density")
+
+## Mean Activity vs. Standardized Mussles Eaten Plot
+ggplot(data_complete_average, aes(x=avg_activity_proportion, y=avg_standardized_mussels_eaten, color=as.factor(crab_dens)))+geom_point()+
+  geom_smooth(method = "lm")+
+  labs(title="Mean Activity vs. Standardized Mussels Eaten per Crab", x="Mean Activity Proportion", y="Mean Standardized Mussels Eaten", color="Crab Density")
+
+## Mean Activity vs. Mussels Handled
+ggplot(data_complete_average, aes(x=avg_activity_proportion, y=avg_mussels_handled, color=as.factor(crab_dens)))+geom_point()+
+  geom_smooth(method = "lm")+
+  labs(title="Mean Activity vs. Mussels Handled per Crab", x="Mean Activity Proportion", y="Mean Mussels Handled", color="Crab Density")
+
+## Mean Activity vs. Standardized Mussels Handled
+ggplot(data_complete_average, aes(x=avg_activity_proportion, y=avg_standardized_mussels_handled, color=as.factor(crab_dens)))+geom_point()+
+  geom_smooth(method = "lm")+
+  labs(title="Mean Activity vs. Standardized Mussels Handled per Crab", x="Mean Activity Proportion", y="Mean Standardized Mussels Handled", color="Crab Density")
 
