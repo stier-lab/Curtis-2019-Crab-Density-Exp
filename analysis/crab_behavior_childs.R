@@ -35,9 +35,12 @@ data_complete <- joined %>%
          standardized_mussels_handled=sum_mussels_handled/video_total,
          standardized_total_aggression=total_aggression/video_total)
 
-## Activity Distribution per Crab
-ggplot(data_complete, aes(x = reorder(metadat_id, activity_proportion), y = activity_proportion, color=as.factor(crab_dens)))+geom_col()+
+## Activity Distribution per Crab - SEE EXAPMLE FOR SAVING PLOT - JC
+example <- ggplot(data_complete, aes(x = reorder(metadat_id, activity_proportion), y = activity_proportion, color=as.factor(crab_dens)))+geom_col()+
   labs(title="Activity Distribution per Crab", x="Meta ID", y="Activity Proportion")
+
+ggsave("example_for_jeff.png", plot = example, device ="png", path = here("figures"))
+remove(example)
 
 #5) Figures Per Crab
 ## Density vs. Activity Plot
